@@ -25,6 +25,7 @@ trait UserMemberList{
         //返回表格数据
         $count = $users->count();
         $arr = $users->offset($pages['page'])->limit($pages['limit'])->get();
+
         return returnJson($arr , $count);
     }
 
@@ -75,7 +76,8 @@ trait UserMemberList{
         if (is_null($type)){
             return $arr;
         }else{
-            return count(collect($arr));  // 好奇 为什么这个地方， 返回的数据不可以是  count($arr); 
+
+            return count(collect($arr));  // 好奇 为什么这个地方， 返回的数据不可以是  count($arr);
                                     // 我是想返回 这个数组 有多少条数据，可是死活不行。 只能做成一个集合 
                                     //  它返回的数据结构应该是  [1,2,3,4,5,6]
         }
