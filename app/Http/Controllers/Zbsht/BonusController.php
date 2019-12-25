@@ -19,8 +19,8 @@ class BonusController extends Controller
     // 显示页面 返回数据
     public function userIndex(BonusRequest $request , Bonus $bonus){
 
-
-        return $bonus->getMemberList($request , $bonus , null , 'asc');
+        $response = $bonus->getMemberList($request , $bonus);
+        return returnJson($response['arr'] , $response['count']);
     }
 
     // 创建数据

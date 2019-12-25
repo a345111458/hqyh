@@ -33,7 +33,7 @@ trait UserInfoHelper{
     public function calculateUsers(){
 
         Cache::has($this->cache_key_offset) ?:Cache::put($this->cache_key_offset , 0 , $this->cache_expire_in_seconds);
-        $user = User::Query()->offset(Cache::get($this->cache_key_offset))->limit(500)->get();
+        $user = User::Query()->offset(Cache::get($this->cache_key_offset))->limit(1000)->get();
 
         if($user->count() > 0){
             return dispatch(new Userinfo($user));

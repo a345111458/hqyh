@@ -35,12 +35,12 @@ class UpdateUserCache implements ShouldQueue
      */
     public function handle()
     {
-        $users = Cache::get('hqyh_active_users');
-        $nweUser = User::find($this->user['user_id']);
+        $users = Cache::get('hqyh_active_users') ?? [];
+        $nweUser = User::find($this->user['id']);
 
         $newArr = array_filter($users , function($user) use ($nweUser){
             foreach ($user as $k=>$v){
-                if ($v == $nweUser->user_id){
+                if ($v == $nweUser->id){
                     return false;
                 }
                 return true;

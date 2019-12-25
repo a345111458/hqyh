@@ -14,6 +14,18 @@ class User extends Authenticatable
     use Traits\UserInfoHelper;
     use Traits\UserMemberList;
 
+    // 返佣提现金额设置
+    const PRICE_NAME_ONT = 'nameOne';
+    const PRICE_NAME_TWO = 'nameTwo';
+    const PRICE_NAME_THREE = 'nameThree';
+    const PRICE_NAME_FOUR = 'nameFour';
+
+    public static $cashStatusMap = [
+        self::PRICE_NAME_ONT    =>      '1000',
+        self::PRICE_NAME_TWO    =>      '100',
+        self::PRICE_NAME_THREE  =>      '10',
+        self::PRICE_NAME_FOUR   =>      '1',
+    ];
 
     // public $timestamps = false;
 
@@ -28,21 +40,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token'
     ];
-
     protected $fillable = ['name','email','phone','password','to_examine','pid'];
-
-    protected $guarded = ['team_ztui'];
-
-    protected $appends = ['team_ztui','team_zon','pid_name'];
+    protected $appends = ['team_zon','pid_name','team_ztui','price_one','price_two','price_three','price_four','is_to_examine'];
 
 
-
-//    // 找到自己的推荐人
-//    protected $appends = ['tuijren'];
-//    public function getTuijrenAttribute(){
-//        return $this->where('user_id',$this->first_leader)->pluck('account');
-//    }
-//
         // 自关联，查询自身下的会员
         public function child(){
 
@@ -57,8 +58,9 @@ class User extends Authenticatable
 
     // 找到自己的推荐人
     public function getPidNameAttribute(){
-
-        return $this->find($this->attributes['pid'])['name'] ?? '无';
+        //$pid = $this->attributes['pid'];
+        //$res = $this->where('id',$pid)->get()->pluck('name');
+        //return $res ?? '无';
     }
 
 
@@ -68,7 +70,7 @@ class User extends Authenticatable
      */
     public function getTeamZtuiAttribute(){
 
-        return $this->getTeamZtui($this->attributes['id']);
+        return $this->getTeamZtui($this->attributes['id'])->count();
     }
 
     /**
@@ -77,7 +79,28 @@ class User extends Authenticatable
      */
     public function getTeamZonAttribute(){
 
-        return $this->getTeamZon($this->attributes['id'] ?? 0 , true , true);
+        return $this->getTeamZon($this->attributes['id'] , true , true);
+    }
+
+    // 设置一个字段 ，给来存放自身 直推奖金
+    public function getPriceOneAttribute(){
+
+        //return $this->PriceTwo();
+    }
+
+    // 设置一个字段 ，给来存放自身 团队奖金
+    public function getPriceTwoAttribute(){
+
+    }
+
+    // 设置一个字段 ，给来存放自身 子团队奖金
+    public function getPriceThreeAttribute(){
+
+    }
+
+    // 设置一个字段 ，给来存放自身 子子团队奖金
+    public function getPriceFourAttribute(){
+
     }
 
     // 用访问器创建一个 没有的字段
@@ -111,10 +134,23 @@ class User extends Authenticatable
 
         // 保存数据库之后进行操作 // 用户数据修改，更新缓存
         static::saved(function($models){
-
-            $userId = $models->toArray();
+            //$userId = $models->toArray();
             // 队列 更新缓存
-            dispatch(new UpdateUserCache($userId));
+            //dispatch(new UpdateUserCache($userId));
+
+            // 这里是时时写入缓存   #上面是队列写入缓存
+            $users = Cache::get('hqyh_active_users') ?? [];
+            $nweUser = $models->toArray();
+            $newArr = array_filter($users , function($user) use ($nweUser){
+                foreach ($user as $k=>$v){
+                    if ($v == $nweUser['id']){
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            return Cache::put('hqyh_active_users',array_merge($newArr , [$nweUser]));
+            // 这里是时时写入缓存 END
         });
 
         // 入库前 修改数据

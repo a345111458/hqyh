@@ -177,6 +177,7 @@
                     statusCode: 0 //重新规定成功的状态码为 200，table 组件默认为 0
                 }
                 ,parseData: function(res){ //将原始数据解析成 table 组件所规定的数据
+                    layer.closeAll();
                     return {
                         "code": res.code, //解析接口状态
                         "msg": res.msg, //解析提示文本
@@ -189,6 +190,7 @@
             //监听搜索
             form.on('submit(LAY-user-back-search)', function(data){
                 var field = data.field;
+                layer.load(0,{shade: [0.1, 'gray'],})
 
                 //执行重载
                 table.reload('demoReload', {

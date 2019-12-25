@@ -19,7 +19,8 @@ class ConfigController extends Controller
     // 显示页面 返回数据
     public function userIndex(ConfigRequest $request , Config $config){
 
-        return $config->getMemberList($request , $config);
+        $response = $config->getMemberList($request , $config);
+        return returnJson($response['arr'] , $response['count']);
     }
 
     // 创建数据

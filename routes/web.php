@@ -50,6 +50,9 @@ Route::namespace('Zbsht')->prefix('zbsht')->group(function(){
         Route::get('bonus/userIndex','BonusController@userIndex')->name('bonus.userIndex');
         Route::resource('bonus','BonusController');
 
+        // 提现管理
+        Route::get('cash/userIndex','CashController@userIndex')->name('cash.userIndex');
+        Route::resource('cash','CashController');
 
 
 

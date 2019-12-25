@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class UsersTableSeeder extends Seeder
 {
+
+    protected $appends = [];
     /**
      * Run the database seeds.
      *
@@ -14,14 +16,16 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
+        $data = factory(User::class)->times(3)->make()
+            ->makeHidden(['team_ztui','team_zon','pid_name','price_one','price_two','price_three','price_four','is_to_examine'])->toArray();
 
-        factory(User::class , 3)->create();
-
+        User::insert($data);
 
         $user = User::find(1);
         $user->name = '345111458';
         $user->email = '345111458@qq.com';
         $user->password = bcrypt('123456');
+        $user->pid = 0;
         $user->save();
     }
 }

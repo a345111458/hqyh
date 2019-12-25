@@ -211,13 +211,14 @@
                     {field:'tourPlayerId', title:'排序', width:80, fixed: 'left', unresize: true, sort: true, type:'numbers'}
                     ,{field:'id', title:'ID', width:80, fixed: 'left', unresize: true, sort: true, totalRowText: '合计行'}
                     ,{field:'name', title:'姓名', width:160, edit: 'text'}
+                    ,{field:'pid_name', title:'推荐人', width:120,}
                     ,{field:'email', title:'账号', width:180, edit: 'text'}
                     ,{field:'phone', title:'手机号', width:120, edit: 'text'}
-                    ,{field:'pid', title:'推荐人', width:120,}
                     ,{field:'pid', title:'学车套餐', width:120,}
                     ,{field:'to_examine', title:'审核状态', width:120}
                     ,{field:'created_at', title:'注册时间', width:180,sort:true, edit: 'text'}
-                    ,{field:'pid', title:'团队人数', width:100, edit: 'text'}
+                    ,{field:'team_ztui', title:'直推人数', width:100}
+                    ,{field:'team_zon', title:'团队人数', width:100}
                     ,{field:'username', title:'操作', templet:"#operation" , unresize: true}
                 ]]
                 ,id:'demoReload'
@@ -229,6 +230,7 @@
                     statusCode: 0 //重新规定成功的状态码为 200，table 组件默认为 0
                 }
                 ,parseData: function(res){ //将原始数据解析成 table 组件所规定的数据
+                    layer.closeAll();
                     return {
                         "code": res.code, //解析接口状态
                         "msg": res.msg, //解析提示文本
@@ -241,6 +243,7 @@
             //监听搜索
             form.on('submit(LAY-user-back-search)', function(data){
                 var field = data.field;
+                layer.load(0,{shade: [0.1, 'gray'],})
 
                 //执行重载
                 table.reload('demoReload', {

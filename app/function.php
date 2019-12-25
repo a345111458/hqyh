@@ -1,4 +1,5 @@
 <?php
+use App\Models\User;
 
 function ss($arr){
 
@@ -35,6 +36,48 @@ function returnJson($arr , $count){
     $data['count']= $count;
     $data['data'] = $arr;
     echo json_encode($data);
+}
+
+
+/**
+* 获取所有 子孙目录
+ */
+function getTreeData($array, $fid = 0, $level = 0) {
+    $column = [];
+    foreach ($array as $key => $vo) {
+        if ($vo['pid'] == $fid) {
+            $vo['level'] = $level;
+            $column[$key] = $vo;
+            $column [$key]['allchild'] = getTreeData($array, $vo['id'], $level + 1);
+        }
+    }
+    return $column;
+}
+
+
+
+
+/**
+ * [数组下数据 相加]
+ * @param  [type] $arr [description]
+ * @return [type]      [description]
+ */
+function dataMerge($data){
+    $arr = getTreeData($data);
+
+    foreach ($arr as $k => $v) {
+
+        $arr[$k]['team_zon'] = count($arr[$k]['allchild']);
+        if (is_array($v['allchild'])) {
+            $arr[$k]['allchilds'] = getTreeData($v['allchild']);
+            $arr[$k]['team_ztui'] = count($arr[$k]['allchild']);
+            $arr[$k]['team_zon'] += array_sum(array_column($arr[$k]['allchilds'],'team_zon'));
+        }
+        //unset($arr[$k]['allchilds']);
+        //unset($arr[$k]['allchild']);
+    }
+
+    return array_values($arr);
 }
 
 
@@ -117,6 +160,23 @@ function getMenuTree($array, $fid = 0, $level = 0) {
     return $column;
 }
 
+
+
+/**
+* 实现以二维数组指定某一个key排序
+ */
+function arraySort($array,$keys,$sort='asc') {
+    $newArr = $valArr = array();
+    foreach ($array as $key=>$value) {
+        $valArr[$key] = $value[$keys];
+    }
+    ($sort == 'asc') ?  asort($valArr) : arsort($valArr);//先利用keys对数组排序，目的是把目标数组的key排好序
+    reset($valArr); //指针指向数组第一个值
+    foreach($valArr as $key=>$value) {
+        $newArr[$key] = $array[$key];
+    }
+    return $newArr;
+}
 
 
 
