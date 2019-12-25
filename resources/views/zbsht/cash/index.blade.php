@@ -7,7 +7,6 @@
 @stop
 
 @section('content')
-
     <div class="layui-fluid">
         <div class="layui-card">
             <div class="layui-form layui-card-header layuiadmin-card-header-auto">
@@ -19,10 +18,15 @@
                         </div>
                     </div>
                     <div class="layui-inline">
-                        <label class="layui-form-label">手机</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="phone" placeholder="请输入" value="{{ old('phone' , $param['phone'] ?? '') }}" autocomplete="off" class="layui-input">
-                        </div>
+                        {{--<label class="layui-form-label">审核状态</label>--}}
+                        {{--<div class="layui-input-block">--}}
+                            <select name="param">
+                                <option value="">--审核状态--</option>
+                                <option value="0">未审核</option>
+                                <option value="1">已审核</option>
+                                <option value="2">锁定用户</option>
+                            </select>
+                        {{--</div>--}}
                     </div>
                     {{--<div class="layui-inline">--}}
                         {{--<label class="layui-form-label">邮箱</label>--}}
@@ -32,29 +36,29 @@
                         {{--</div>--}}
                     {{--</div>--}}
                     <div class="layui-inline">
-                        <label class="layui-form-label">查询条数</label>
-                        <div class="layui-input-block">
+                        {{--<label class="layui-form-label">查询条数</label>--}}
+                        {{--<div class="layui-input-block">--}}
                             <select name="limits">
-                                <option value="">查询条数</option>
+                                <option value="10">--查询条数--</option>
                                 <option value="1">1</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                                 <option value="500">500</option>
                                 <option value="1000">1000</option>
                             </select>
-                        </div>
+                        {{--</div>--}}
                     </div>
 
                     <div class="layui-inline">
                         <label class="layui-form-label">开始日期</label>
                         <div class="layui-input-block">
-                            <input type="text" class="layui-input" id="test27" readonly="" placeholder="yyyy-MM-dd">
+                            <input type="text" class="layui-input" id="test27" name="time_out" readonly="" placeholder="yyyy-MM-dd">
                         </div>
                     </div>
                     <div class="layui-inline">
                         <label class="layui-form-label">结束日期</label>
                         <div class="layui-input-block">
-                            <input type="text" class="layui-input" id="test27" readonly="" placeholder="yyyy-MM-dd">
+                            <input type="text" class="layui-input" id="test28" name="time_end" readonly="" placeholder="yyyy-MM-dd">
                         </div>
                     </div>
                     <div class="layui-inline">
@@ -81,12 +85,23 @@
             base: '/layuiadmin/',
         }).extend({
             index: 'lib/index'
-        }).use(['table','laytpl'],function(){
+        }).use(['table','laytpl','laydate'],function(){
             var $ = layui.$
                 ,form = layui.form
                 ,table = layui.table
+                ,laydate = layui.laydate
                 ,laytpl = layui.laytpl;
             form.render();
+
+            //日期只读
+            laydate.render({
+                elem: '#test27'
+                ,trigger: 'click'
+            });
+            laydate.render({
+                elem: '#test28'
+                ,trigger: 'click'
+            });
 
             $('button[lay-event=add]').on('click',function(){
                 layer.open({
@@ -197,7 +212,7 @@
             //监听搜索
             form.on('submit(LAY-user-back-search)', function(data){
                 var field = data.field;
-                layer.load(0,{shade: [0.1, 'gray'],})
+                //layer.load(0,{shade: [0.1, 'gray'],})
                 //执行重载
                 table.reload('demoReload', {
                     page: { // 查询时重载分页按钮条数
@@ -210,6 +225,9 @@
                             'email': field.email,
                             'phone': field.phone,
                         }
+                        ,'time_out': field.time_out
+                        ,'time_end': field.time_end
+                        ,'param': field.param
                         ,_token:field._token, // 条件
                     }
                 }, 'data');

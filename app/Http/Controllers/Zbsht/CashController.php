@@ -12,7 +12,15 @@ class CashController extends Controller
 {
 
     // 显示页面
-    public function index(){
+    public function index(CashRequest $request , User $user){
+
+        $response = $user->whereIn('id',['1','2'])->get();
+
+        foreach ($response as $k=>&$v){
+            $v['priceOne'] = $user->PriceTwo($v['id']);
+        }
+
+        dd($response->toArray());
 
         return view('zbsht.cash.index');
     }
@@ -26,6 +34,12 @@ class CashController extends Controller
 //        dd($users->toArray());exit;
 //        dd($request->time_out , $request->time_end);exit;
         $response = $user->getMemberList($request , $user);
+        $arr = ['static'=>true , 'level'=>1];
+        //dd($response['arr']->toArray());
+        foreach($response['arr'] as $k=>&$v){
+            $v['priceOne'] = $user->PriceTwo($response['arr'] , $arr , $request);
+        }
+        //$response['arr'] = $user->PriceTwo($response['arr'] , $arr , $request);
         return returnJson($response['arr'] , $response['count']);
     }
 

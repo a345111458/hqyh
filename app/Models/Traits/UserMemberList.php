@@ -11,23 +11,16 @@ trait UserMemberList{
 
     // 获取用户会员数据
     public function getMemberList($request , $user , $order = 'desc' , array $with = []){
-        // 判断有没有传时间过来，如果没有生成一个
-        $this->getRequestTime($request);
+
         // 返回 layui 分页所需格式
         $pages = pageLimit($request);
         $users = $user->query()->orderBy('id', $order);
 
+        // 判断有没有传时间过来，如果没有生成一个
+        $this->getRequestTime($request , $users);
+
         if (!empty($with)){
             $users->with($with);
-        }
-
-        if (!empty($request->time_out) && !empty($request->time_end)){
-            $users->whereDate('created_at','>=', $request->time_out)
-                ->whereDate('created_at','<=', $request->time_end);
-        }else if(!empty($request->time_out)){
-            $users->whereDate('created_at','>=', $request->time_out);
-        }else if(!empty($request->time_end)){
-            $users->whereDate('created_at','>=', $request->time_end);
         }
 
         if (!is_null($request->param)){
@@ -67,7 +60,6 @@ trait UserMemberList{
         }
     }
 
-
     /**
      * 查询自己直推会员
      * @return [type] [description]
@@ -78,15 +70,52 @@ trait UserMemberList{
     }
 
 
-    public function PriceTwo($arr , $price = 0){
-        $newArr = 0;
-        $level = 0;
-        foreach($arr as $v){
-            if ($v->is_to_examine == 1){
-                $newArr += $price ;
-                $level++;
-                if (is_array($v->priceOne) && $level <= 2){
-                    $this->PriceTwo($v->priceOne , $price);
+    public function forPriceArr($data , $arr , $request){
+        //dd($data->count(),$arr , $request->all());
+        foreach ($data as $k=>&$v){
+            $v['priceOne'] = $this->PriceTwo($v['id'] , $arr , $request);
+        }
+    }
+
+    /**
+     * 获取提成金额
+     * @param  [type]  $id [传入ID]
+     * @param  [type]  $arr  [传入数据数组 => ['static'=>true , 'level'=>1]]
+     * @param  boolean $clean [是否清除静态变量,默认不清除]
+     * @return [type]         [description]
+     */
+    public function PriceTwo($id , $static = true , $level = 1){
+//    public function PriceTwo($id , $price = 0 , $level = 1 , $static = false){
+        static $newArr = ['priceOne'=>'0','priceTwo'=>'0','priceThree'=>'0','priceFour'=>'0'];
+        if ($static){ // 判断是否清除 静态变量里的数据，true 清除
+            $newArr['priceOne'] = 0;
+            $newArr['priceTwo'] = 0;
+            $newArr['priceThree'] = 0;
+            $newArr['priceFour'] = 0;
+        }
+
+        $response = $this->where('pid',$id)->get();
+
+        if ($response->count() > 0){
+            foreach($response as $v){
+                if ($v->is_to_examine == 1){
+                    switch ($level){
+                        case '1':
+                            $newArr['priceOne'] += self::$cashStatusMap['nameOne'];
+                            break;
+                        case '2':
+                            $newArr['priceTwo'] += self::$cashStatusMap['nameTwo'];
+                            break;
+                        case '3':
+                            $newArr['priceThree'] += self::$cashStatusMap['nameThree'];
+                            break;
+                        case '4':
+                            $newArr['priceFour'] += self::$cashStatusMap['nameFour'];
+                            break;
+                    }
+                    if ($level <= 4 ){
+                        $this->PriceTwo($v->id , false , $level+1);
+                    }
                 }
             }
         }
@@ -122,16 +151,26 @@ trait UserMemberList{
         }
     }
 
-
     /**
-    * 判断有没有传时间过来，如果没有生成一个
+     * 判断有没有传时间过来,如果没有生成一个
+     * @param  [type]  $request [传过来的数据]
+     * @param  boolean $users [传过来的 模型]
+     * @return [return]         [返回查询 条件]
      */
-    public function getRequestTime($request){
+    public function getRequestTime($request , $users){
         if (!$request->filled('time_out') && !$request->filled('time_end')){
-            $request->time_out = Carbon::now()->subDays(1)->toDateString(); // 当前时间 减少一天，
+            $request->time_out = Carbon::now()->subDays(0)->toDateString(); // 当前时间 减少一天，
             $request->time_end = Carbon::now()->toDateString(); // 当前时间
         }
-        return $request;
+
+        if (!empty($request->time_out) && !empty($request->time_end)){
+            return $users->whereDate('created_at','>=', $request->time_out)
+                ->whereDate('created_at','<=', $request->time_end);
+        }else if(!empty($request->time_out)){
+            return $users->whereDate('created_at','>=', $request->time_out);
+        }else if(!empty($request->time_end)){
+            return $users->whereDate('created_at','>=', $request->time_end);
+        }
     }
 
 
