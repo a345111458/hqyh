@@ -32,6 +32,11 @@ class User extends Authenticatable
     // protected $primaryKey = 'user_id';
 
 
+    public function cash(){
+
+        return $this->belongsTo(Cash::class);
+    }
+
     /**
      * The attributes that should be hidden for arrays.
      *
@@ -58,9 +63,9 @@ class User extends Authenticatable
 
     // 找到自己的推荐人
     public function getPidNameAttribute(){
-        //$pid = $this->attributes['pid'];
-        //$res = $this->where('id',$pid)->get()->pluck('name');
-        //return $res ?? '无';
+        $pid = $this->attributes['pid'];
+        $res = $this->where('id',$pid)->get()->pluck('name');
+        return $res ?? '无';
     }
 
 
@@ -106,7 +111,7 @@ class User extends Authenticatable
     // 用访问器创建一个 没有的字段
     public function getIsToExamineAttribute(){
 
-        return $this->attributes['to_examine'];
+        //return $this->attributes['to_examine'];
     }
 
     //用访问器 设置一个字段的内容
@@ -132,24 +137,21 @@ class User extends Authenticatable
     protected static function boot(){
         parent::boot();
 
-        // 保存数据库之后进行操作 // 用户数据修改，更新缓存
-        static::saved(function($models){
-            //$userId = $models->toArray();
-            // 队列 更新缓存
+        // 更新数据库之后进行操作 // 用户数据修改，更新缓存
+        static::updated(function($models){
+            $userId = $models->toArray();
+            // 队列 更新缓存 ，目前不用，高并发可用
             //dispatch(new UpdateUserCache($userId));
 
+            // 这里是时时写入缓存，高并发会有问题   #上面是队列写入缓存
+            parent::isArrayFilterUser($models);
+            // 这里是时时写入缓存 END
+        });
+
+        // 插入/保存 数据库后，添加一条缓存
+        static::created(function($model){
             // 这里是时时写入缓存   #上面是队列写入缓存
-            $users = Cache::get('hqyh_active_users') ?? [];
-            $nweUser = $models->toArray();
-            $newArr = array_filter($users , function($user) use ($nweUser){
-                foreach ($user as $k=>$v){
-                    if ($v == $nweUser['id']){
-                        return false;
-                    }
-                    return true;
-                }
-            });
-            return Cache::put('hqyh_active_users',array_merge($newArr , [$nweUser]));
+            parent::isArrayFilterUser($model);
             // 这里是时时写入缓存 END
         });
 

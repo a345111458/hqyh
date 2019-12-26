@@ -105,10 +105,10 @@
                         if (res.status == 0) {
                             layer.msg(res.msg,{icon:5,time:1000},function(){});
                         }else{
-                            layer.msg(res.msg,{icon:6,time:1500},function(){
-                                parent.layer.closeAll();
-                                parent.location.reload();
-                            });
+                            //layer.msg(res.msg,{icon:6,time:1500},function(){
+                                //parent.layer.closeAll();
+                                //parent.location.reload();
+                            //});
                         }
                     },
                     error:function(e){

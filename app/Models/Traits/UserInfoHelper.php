@@ -29,17 +29,38 @@ trait UserInfoHelper{
         });
     }
 
-
+    /**
+     *  运行 exec('php artisan command:hqyh-userinfo');
+     *  UserInfoCommand 会来调用这个方法生成用户缓存
+     */
     public function calculateUsers(){
 
         Cache::has($this->cache_key_offset) ?:Cache::put($this->cache_key_offset , 0 , $this->cache_expire_in_seconds);
         $user = User::Query()->offset(Cache::get($this->cache_key_offset))->limit(1000)->get();
 
         if($user->count() > 0){
-            return dispatch(new Userinfo($user));
+            return dispatch(new Userinfo($user)); // 执行 Userinfo.php 队列文件
         }
         return Cache::forget($this->cache_key_offset);
     }
+
+    /**
+    *  时时写入缓存 ，判断有没有重复的
+     */
+    public function isArrayFilterUser($models){
+        // 这里是时时写入缓存   #上面是队列写入缓存
+        $users = Cache::get('hqyh_active_users') ?? [];
+        $newUser = $models->toArray();// 传入用户数据,数组
+        $newArr = array_filter($users , function($users) use ($newUser){
+            // 这里面的 $users 已从二维数组变成一维数组了
+            if ($users['id'] == $newUser['id']){
+                return false;
+            }
+            return true;
+        });
+        return Cache::put('hqyh_active_users',array_merge($newArr , [$newUser]));
+    }
+
 
 
 

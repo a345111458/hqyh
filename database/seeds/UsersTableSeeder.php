@@ -16,7 +16,7 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-        $data = factory(User::class)->times(3)->make()
+        $data = factory(User::class)->times(1)->make()
             ->makeHidden(['team_ztui','team_zon','pid_name','price_one','price_two','price_three','price_four','is_to_examine'])->toArray();
 
         User::insert($data);

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Zbsht\CashRequest;
 use App\Models\User;
 use Carbon\Carbon;
+use Cache;
 
 
 class CashController extends Controller
@@ -14,32 +15,21 @@ class CashController extends Controller
     // 显示页面
     public function index(CashRequest $request , User $user){
 
-        $response = $user->whereIn('id',['1','2'])->get();
-
-        foreach ($response as $k=>&$v){
-            $v['priceOne'] = $user->PriceTwo($v['id']);
-        }
-
-        dd($response->toArray());
+//        $users = $user->all();
+//        Cache::put('users' , $users);
+//            $cache = Cache::get('users');
+//        dd($cache->firstWhere('id',1)->team_zon);
 
         return view('zbsht.cash.index');
     }
 
     // 显示页面 返回数据
     public function userIndex(CashRequest $request , User $user){
-//        $users = $user->whereDate('created_at','>=', $request->time_end)
-//            ->whereDate('created_at','<=', $request->time_end)
-//            ->get();
-//
-//        dd($users->toArray());exit;
-//        dd($request->time_out , $request->time_end);exit;
+
         $response = $user->getMemberList($request , $user);
-        $arr = ['static'=>true , 'level'=>1];
-        //dd($response['arr']->toArray());
-        foreach($response['arr'] as $k=>&$v){
-            $v['priceOne'] = $user->PriceTwo($response['arr'] , $arr , $request);
+        foreach ($response['arr'] as $k=>&$v){
+            $v['priceOne'] = $user->PriceTwo($v['id']);
         }
-        //$response['arr'] = $user->PriceTwo($response['arr'] , $arr , $request);
         return returnJson($response['arr'] , $response['count']);
     }
 

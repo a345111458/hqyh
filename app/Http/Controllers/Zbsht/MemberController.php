@@ -6,17 +6,31 @@ use Cache;
 use App\Http\Requests\Zbsht\MemberRequest;
 use App\Http\Requests\Zbsht\UserRequest;
 use App\Models\User;
+use App\Models\Cash;
 use Braintree\Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Arr;
 
 
 class MemberController extends Controller
 {
     // 表格
     public function index(Request $request , User $user){
+
+//        Cache::put('UserHandleData' , $user->all());
+        $user = Cache::get('hqyh_active_users');
+
+
+
+//        dd($user);
+
+
+
+
+        //dd(Cache::get('UserHandleData'));
 
         return view('zbsht.member.index');
     }

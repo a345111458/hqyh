@@ -183,12 +183,22 @@
                     ,{field:'name', title:'姓名', width:160, edit: 'text'}
                     ,{field:'pid_name', title:'推荐人', width:120,}
                     ,{field:'email', title:'账号', width:180, edit: 'text'}
-                    ,{field:'phone', title:'手机号', width:120, edit: 'text'}
-                    ,{field:'pid', title:'学车套餐', width:120,}
                     ,{field:'to_examine', title:'审核状态', width:120}
                     ,{field:'created_at', title:'注册时间', width:180,sort:true, edit: 'text'}
                     ,{field:'team_ztui', title:'直推人数', width:100}
                     ,{field:'team_zon', title:'团队人数', width:100}
+                    ,{field:'team_zon', title:'一级提成', width:100,templet:function(e){
+                        return e.priceOne.priceOne;
+                    }}
+                    ,{field:'team_zon', title:'二级提成', width:100,templet:function(e){
+                        return e.priceOne.priceTwo;
+                    }}
+                    ,{field:'team_zon', title:'三级提成', width:100,templet(e){
+                        return e.priceOne.priceThree;
+                    }}
+                    ,{field:'team_zon', title:'四级提成', width:100,templet:function(e){
+                        return e.priceOne.priceFour;
+                    }}
                 ]]
                 ,id:'demoReload'
                 ,method:'GET'

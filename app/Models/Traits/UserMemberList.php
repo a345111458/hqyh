@@ -1,9 +1,10 @@
 <?php
 namespace App\Models\Traits;
 use App\Models\User;
+use App\Models\Cash;
 use Cache;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\DB;
 
 
 trait UserMemberList{
@@ -50,14 +51,70 @@ trait UserMemberList{
 
     // 添加 会员 trait
     public function addUser($request , $user){
-        $user->fill($request->all());
-        $user->pid = $user->where('email',$request->pid)->get()->pluck('id')[0];
-        $user->password = bcrypt($user->password);
-        if ($user->save()){
-            return $user;
-        }else{
-            return false;
+        DB::beginTransaction();// 开启一个事物
+        try{
+            $user->fill($request->all());
+            $user->pid = $user->where('email',$request->pid)->get()->pluck('id')[0];
+            $user->password = bcrypt($user->password);
+
+            if ($user->save()){
+                $this->addCash($user);
+                DB::commit();
+                return $user;
+            }
+        }catch(\Exception $e){
+            DB::rollBack();
+            abort(403,'系统错误，稍后在试');
         }
+    }
+
+
+    /**
+    * 推荐用户后，生成用户奖金信息
+     */
+    public function addCash($userArr , $level = 1){
+        $data = [];
+        if ($level == 1){// 如果为1保存一次ID
+            Cache::put('user_id' , $userArr->id);
+        }
+        $userId = Cache::get('user_id'); // 获取第一个，创建的用户ID
+
+        $userUp = $this->userUpperLevel($userArr->pid);// 查找还有没有上级
+        if ($userUp){
+            $data['user_id'] = $userId;
+            $data['divide_id'] = $userUp->id;
+            $data['level'] = $level;
+            switch ($level){
+                case '1':
+                    $data['price'] = 1000;
+                    break;
+                case '2':
+                    $data['price'] = 100;
+                    break;
+                case '3':
+                    $data['price'] = 10;
+                    break;
+                case '4':
+                    $data['price'] = 1;
+                    break;
+            }
+            $res = Cash::create($data);
+
+            if ($userUp->pid != 0 && $level < 4){
+                $this->addCash($userUp , $level+1);// 递归找4级用户
+            }
+            Cache::forget('user_id');// 删除用户ID
+            return $res;
+        }
+    }
+
+
+    /**
+    * 查找自己的上一级
+     */
+    public function userUpperLevel($id){
+
+        return $this->find($id) ?? false;
     }
 
     /**
@@ -159,7 +216,7 @@ trait UserMemberList{
      */
     public function getRequestTime($request , $users){
         if (!$request->filled('time_out') && !$request->filled('time_end')){
-            $request->time_out = Carbon::now()->subDays(0)->toDateString(); // 当前时间 减少一天，
+            $request->time_out = Carbon::now()->subDays(10)->toDateString(); // 当前时间 减少一天，
             $request->time_end = Carbon::now()->toDateString(); // 当前时间
         }
 

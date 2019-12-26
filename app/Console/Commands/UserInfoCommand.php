@@ -21,7 +21,7 @@ class UserInfoCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'user 生成缓存';
 
     /**
      * Create a new command instance.
@@ -41,8 +41,10 @@ class UserInfoCommand extends Command
     public function handle()
     {
         $this->info('开始...');
-        $users = new User;
-        $users->calculateUsers();
-
+//        $userId = $this->ask('输入密码！');
+//        if ($userId == '369258147'){
+            $user = new User();
+            $user->calculateUsers();
+//        }
     }
 }
