@@ -19,6 +19,7 @@ class User extends Authenticatable
     const PRICE_NAME_TWO = 'nameTwo';
     const PRICE_NAME_THREE = 'nameThree';
     const PRICE_NAME_FOUR = 'nameFour';
+    const HQYH_ACTIVE_USERS = 'hqyh_active_users';
 
     public static $cashStatusMap = [
         self::PRICE_NAME_ONT    =>      '1000',
@@ -46,7 +47,7 @@ class User extends Authenticatable
         'password', 'remember_token'
     ];
     protected $fillable = ['name','email','phone','password','to_examine','pid'];
-    protected $appends = ['team_zon','pid_name','team_ztui','price_one','price_two','price_three','price_four','is_to_examine'];
+    protected $appends = ['team_zon','pid_name','team_ztui','price_one','price_two','price_three','price_four','is_to_examine','password'];
 
 
         // 自关联，查询自身下的会员
@@ -63,8 +64,9 @@ class User extends Authenticatable
 
     // 找到自己的推荐人
     public function getPidNameAttribute(){
-        $pid = $this->attributes['pid'];
-        $res = $this->where('id',$pid)->get()->pluck('name');
+        $arr['key'] = 'id';
+        $arr['value'] = $this->attributes['pid'];
+        $res = self::getFirstWhere($arr , 'name');
         return $res ?? '无';
     }
 
@@ -74,8 +76,11 @@ class User extends Authenticatable
      * @return [type] [description]
      */
     public function getTeamZtuiAttribute(){
+        //$arr['key'] = 'pid';
+        //$arr['value'] = $this->attributes['id'];
+        //return $res = self::getFirstWhere($arr)->count();
 
-        return $this->getTeamZtui($this->attributes['id'])->count();
+        //return $this->getTeamZtui($this->attributes['id'])->count();
     }
 
     /**
@@ -84,7 +89,7 @@ class User extends Authenticatable
      */
     public function getTeamZonAttribute(){
 
-        return $this->getTeamZon($this->attributes['id'] , true , true);
+        //return $this->getTeamZon($this->attributes['id'] , true , true);
     }
 
     // 设置一个字段 ，给来存放自身 直推奖金
@@ -138,18 +143,26 @@ class User extends Authenticatable
         parent::boot();
 
         // 更新数据库之后进行操作 // 用户数据修改，更新缓存
-        static::updated(function($models){
-            $userId = $models->toArray();
+        static::updated(function($model){
             // 队列 更新缓存 ，目前不用，高并发可用
+            //$userId = $model->toArray();
             //dispatch(new UpdateUserCache($userId));
 
             // 这里是时时写入缓存，高并发会有问题   #上面是队列写入缓存
-            parent::isArrayFilterUser($models);
+            parent::isArrayFilterUser($model); // 调用trait
             // 这里是时时写入缓存 END
         });
 
         // 插入/保存 数据库后，添加一条缓存
         static::created(function($model){
+//            $arr['key'] = 'id';
+//            $arr['value'] = $this->attributes['pid'];
+//            return $res = self::getFirstWhere($arr);
+            $refresh = parent::userUpperLevel($model->pid);
+            if ($refresh){
+                parent::isArrayFilterUser($refresh);
+            }
+
             // 这里是时时写入缓存   #上面是队列写入缓存
             parent::isArrayFilterUser($model);
             // 这里是时时写入缓存 END

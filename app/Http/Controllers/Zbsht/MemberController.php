@@ -17,42 +17,38 @@ use Illuminate\Support\Arr;
 
 class MemberController extends Controller
 {
+
     // 表格
     public function index(Request $request , User $user){
-
-//        Cache::put('UserHandleData' , $user->all());
-        $user = Cache::get('hqyh_active_users');
-
-
-
-//        dd($user);
-
-
-
-
-        //dd(Cache::get('UserHandleData'));
+//        $ars = Cache::get(config('usercache.user.hqyh_active_users'));
+//
+//        foreach ($ars as $k=>&$v){
+//            $v['team_zon'] = $user->calcUserTeamData($v['id']);
+//        }
+//        //dd($ars);
 
         return view('zbsht.member.index');
     }
 
 
+
+
+
     /**layui 返回表格数据**/
     public function userIndex(MemberRequest $request , User $user){
+        $user_cache_key = config('usercache.user.hqyh_active_users');
         $pages = pageLimit($request);
-        $hqyh_active_users = Cache::get('hqyh_active_users');
-        $UserNumInfo = Cache::get('UserNumInfo');
+        $hqyh_active_users = Cache::get($user_cache_key);
 
         // 这里用了缓存 速度快了N倍
-        //if (Cache::has('hqyh_active_users') && $UserNumInfo == count($hqyh_active_users)){
-            //$arr = array_values(arraySort($hqyh_active_users, 'id','desc'));
-            //$newArr = array_slice($arr , $pages['page'] , $pages['limit']); // 数组里取多少条数据
-
-            //return returnJson($newArr , count($arr));
-        //}else{
+        if (Cache::has($user_cache_key)){
+            $arr = $user->getUserCache($request);
+            return returnJson($arr['number'] , count($arr['count']));
+        }else{
             $response = $user->getMemberList($request , $user);
 
             return returnJson($response['arr'] , $response['count']);
-        //}
+        }
     }
 
     /*创建用户页面*/

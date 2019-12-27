@@ -35,7 +35,7 @@
                         <label class="layui-form-label">查询条数</label>
                         <div class="layui-input-block">
                             <select name="limits">
-                                <option value="">查询条数</option>
+                                <option value="10">查询条数</option>
                                 <option value="1">1</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
@@ -243,7 +243,7 @@
             //监听搜索
             form.on('submit(LAY-user-back-search)', function(data){
                 var field = data.field;
-                layer.load(0,{shade: [0.1, 'gray'],})
+                //layer.load(0,{shade: [0.1, 'gray'],})
 
                 //执行重载
                 table.reload('demoReload', {

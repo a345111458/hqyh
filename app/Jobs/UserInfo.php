@@ -17,8 +17,7 @@ class UserInfo implements ShouldQueue
 
     protected $users;
 
-    protected $cache_key = 'hqyh_active_users';
-    protected $cache_expire_in_seconds = 65 * 60;
+    protected $hqyh_active_users = 'hqyh_active_users';
     protected $cache_key_offset = "cache_key_offset";
 
     /**
@@ -29,7 +28,6 @@ class UserInfo implements ShouldQueue
     public function __construct($user)
     {
         $this->users = $user;
-        //
     }
 
     /**
@@ -39,12 +37,11 @@ class UserInfo implements ShouldQueue
      */
     public function handle()
     {
-        Cache::has($this->cache_key) ?:Cache::put($this->cache_key , [] , $this->cache_expire_in_seconds);
-        Cache::put($this->cache_key_offset, Cache::get($this->cache_key_offset) + $this->users->count() , $this->cache_expire_in_seconds);
+        Cache::put($this->cache_key_offset, Cache::get($this->cache_key_offset) + $this->users->count());
 
         if ($this->users->count() > 0){
             // 查询出来的用户数据存入缓存
-            Cache::put($this->cache_key , array_merge(Cache::get($this->cache_key) , $this->users->toArray()) , $this->cache_expire_in_seconds);
+            Cache::put($this->hqyh_active_users , array_merge(Cache::get($this->hqyh_active_users , []) , $this->users->toArray()));
             
             exec('php artisan command:hqyh-userinfo');
         }

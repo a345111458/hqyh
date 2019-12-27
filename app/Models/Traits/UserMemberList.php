@@ -42,9 +42,6 @@ trait UserMemberList{
         $newArr['count'] = $users->count();
         $newArr['arr'] = $users->offset($pages['page'])->limit($pages['limit'])->get();
 
-        // 执行队列 写入缓存
-        Cache::put('UserNumInfo' , $newArr['count']);
-
         return $newArr;
     }
 
@@ -111,6 +108,7 @@ trait UserMemberList{
 
     /**
     * 查找自己的上一级
+     * 传入一个PID
      */
     public function userUpperLevel($id){
 
@@ -127,6 +125,9 @@ trait UserMemberList{
     }
 
 
+    /**
+    * 循环得到价格
+     */
     public function forPriceArr($data , $arr , $request){
         //dd($data->count(),$arr , $request->all());
         foreach ($data as $k=>&$v){
@@ -228,6 +229,81 @@ trait UserMemberList{
         }else if(!empty($request->time_end)){
             return $users->whereDate('created_at','>=', $request->time_end);
         }
+    }
+
+    /**
+     * return 一个缓存好的用户数据
+     */
+    public function returnUserCache(){
+        $user_cache_key = config('usercache.user.hqyh_active_users');
+        return $hqyh_active_users = Cache::get($user_cache_key);
+    }
+
+    /**
+     * 计算用户 团队总人数
+     * @param  [type]  $id [传入ID]
+     * @param  boolean $static = false [是否清除静态变量,默认不清除]
+     * @return [type]         [description]
+     */
+    public function calcUserTeamData($id , $static = true){
+        static $data = 0;
+        $static ? $data = 0 : false;
+
+        $userInfo = $this->returnUserCache();
+        $res = collect($userInfo)->firstWhere('pid' , $id);
+        if (!empty($res)){
+            $data += 1 ;
+            $this->calcUserTeamData($res['id'] , false);
+        }
+        return $data;
+    }
+
+    /**
+     * 计算用户 直推人数
+     * @param  [type]  $id [传入ID]
+     * @return [type]         [description]
+     */
+    public function calcUserTeamZtui($id){
+
+        $userInfo = $this->returnUserCache();
+        $res = collect($userInfo)->whereIn('pid' , $id);
+
+        return is_null($res) ? 0 : $res->count();
+    }
+
+
+    /**
+     * 计算用户 推荐人
+     * @param  [type]  $id [传入PID]
+     * @return [type]         [description]
+     */
+    public function calcUserPidName($pid){
+        $userInfo = $this->returnUserCache();
+        $res = collect($userInfo)->firstWhere('id' , $pid)['name'];
+
+        return $res ?? '无';
+    }
+
+    /**
+    *  用户缓存数据重新组合
+     * $request 为用户传过来的搜索条件
+     */
+    public function getUserCache($request){
+        $pages = pageLimit($request);
+        $user_cache_key = config('usercache.user.hqyh_active_users');
+        $hqyh_active_users = $this->returnUserCache();
+
+        $arr = array_values(arraySort($hqyh_active_users, 'id','desc'));
+        $number = array_slice($arr , $pages['page'] , $pages['limit']); // 数组里取多少条数据
+        foreach ($number as $k=>&$v){
+            $v['team_zon'] = $this->calcUserTeamData($v['id']);
+            $v['team_ztui'] = $this->calcUserTeamZtui($v['id']);
+            $v['pid_name'] = $this->calcUserPidName($v['pid']);
+        }
+        $data['number'] = $number;
+        $data['count'] = $arr;
+
+        return $data;
     }
 
 
