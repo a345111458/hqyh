@@ -233,10 +233,11 @@ trait UserMemberList{
 
     /**
      * return 一个缓存好的用户数据
+     * 返回一个 集合数组
      */
     public function returnUserCache(){
         $user_cache_key = config('usercache.user.hqyh_active_users');
-        return $hqyh_active_users = Cache::get($user_cache_key);
+        return collect(Cache::get($user_cache_key));
     }
 
     /**
@@ -249,8 +250,7 @@ trait UserMemberList{
         static $data = 0;
         $static ? $data = 0 : false;
 
-        $userInfo = $this->returnUserCache();
-        $res = collect($userInfo)->firstWhere('pid' , $id);
+        $res = $this->returnUserCache()->firstWhere('pid' , $id);
         if (!empty($res)){
             $data += 1 ;
             $this->calcUserTeamData($res['id'] , false);
@@ -265,9 +265,7 @@ trait UserMemberList{
      */
     public function calcUserTeamZtui($id){
 
-        $userInfo = $this->returnUserCache();
-        $res = collect($userInfo)->whereIn('pid' , $id);
-
+        $res = $this->returnUserCache()->whereIn('pid' , $id);
         return is_null($res) ? 0 : $res->count();
     }
 
@@ -278,8 +276,7 @@ trait UserMemberList{
      * @return [type]         [description]
      */
     public function calcUserPidName($pid){
-        $userInfo = $this->returnUserCache();
-        $res = collect($userInfo)->firstWhere('id' , $pid)['name'];
+        $res = $this->returnUserCache()->firstWhere('id' , $pid)['name'];
 
         return $res ?? '无';
     }
@@ -290,10 +287,8 @@ trait UserMemberList{
      */
     public function getUserCache($request){
         $pages = pageLimit($request);
-        $user_cache_key = config('usercache.user.hqyh_active_users');
-        $hqyh_active_users = $this->returnUserCache();
 
-        $arr = array_values(arraySort($hqyh_active_users, 'id','desc'));
+        $arr = array_values(arraySort($this->returnUserCache(), 'id','desc'));
         $number = array_slice($arr , $pages['page'] , $pages['limit']); // 数组里取多少条数据
         foreach ($number as $k=>&$v){
             $v['team_zon'] = $this->calcUserTeamData($v['id']);
